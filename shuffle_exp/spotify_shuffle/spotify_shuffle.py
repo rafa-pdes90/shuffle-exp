@@ -5,15 +5,16 @@ def fisher_yates_shuffle(x):
     j = random.randrange(i + 1)
     x[i], x[j] = x[j], x[i]
 
-def shuffle(x):
-  songs_by_artists = {}
+def shuffle(x, y):
+  songs_by_y = {}
   
   for song in x:
-    if song.artist not in songs_by_artists:
-      songs_by_artists[song.artist] = list()
-    songs_by_artists[song.artist].append(song)
+    y_attrib = getattr(song, y[0])
+    if y_attrib not in songs_by_y:
+      songs_by_y[y_attrib] = list()
+    songs_by_y[y_attrib].append(song)
 
-  for songs in songs_by_artists.values():
+  for songs in songs_by_y.values():
     song_count = len(songs)
     appear_base = 100/song_count
     appear_lim = appear_base - 100/(song_count+1)
@@ -21,6 +22,9 @@ def shuffle(x):
     
     offset_lim = 100.0 - (appear_max * (song_count - 1))
     offset = random.uniform(0, offset_lim)
+
+    if len(y) > 1:
+      shuffle(songs, y[1:])
 
     fisher_yates_shuffle(songs)
 
