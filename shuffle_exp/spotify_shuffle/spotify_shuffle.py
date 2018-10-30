@@ -1,10 +1,5 @@
 import random
 
-def fisher_yates_shuffle(x):
-  for i in range(len(x)-1, 0, -1):
-    j = random.randrange(i + 1)
-    x[i], x[j] = x[j], x[i]
-
 def shuffle(x, y):
   songs_by_y = {}
   songs_pos = {}
@@ -27,7 +22,7 @@ def shuffle(x, y):
     if len(y) > 1:
       shuffle(songs, y[1:])
 
-    fisher_yates_shuffle(songs)
+    random.shuffle(songs)
 
     songs_pos[songs[0]] = offset
     
