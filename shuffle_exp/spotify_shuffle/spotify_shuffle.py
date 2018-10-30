@@ -7,6 +7,7 @@ def fisher_yates_shuffle(x):
 
 def shuffle(x, y):
   songs_by_y = {}
+  songs_pos = {}
   
   for song in x:
     y_attrib = getattr(song, y[0])
@@ -28,9 +29,9 @@ def shuffle(x, y):
 
     fisher_yates_shuffle(songs)
 
-    songs[0].pos = offset
+    songs_pos[songs[0]] = offset
     
     for i in range (1, song_count):
-      songs[i].pos = songs[i-1].pos + random.uniform(appear_min, appear_max)
+      songs_pos[songs[i]] = songs_pos[songs[i-1]] + random.uniform(appear_min, appear_max)
 
-  x.sort(key=lambda i: i.pos)
+  x.sort(key=lambda i: songs_pos[i])
