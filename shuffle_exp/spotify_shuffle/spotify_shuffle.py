@@ -22,7 +22,6 @@ def shuffle(x, y):
     appear_max, appear_min = min(100.0, appear_base + appear_lim), max(0.0, appear_base - appear_lim)
     
     offset = random.uniform(0.0, 100.0)
-
     songs_pos[songs[0]] = offset
     
     for i in range (1, song_count):
