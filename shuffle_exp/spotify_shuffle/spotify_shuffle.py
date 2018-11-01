@@ -7,7 +7,7 @@ def shuffle(x, y):
   for song in x:
     y_attrib = getattr(song, y[0])
     if y_attrib not in songs_by_y:
-      songs_by_y[y_attrib] = list()
+      songs_by_y[y_attrib] = []
     songs_by_y[y_attrib].append(song)
 
   for songs in songs_by_y.values():
