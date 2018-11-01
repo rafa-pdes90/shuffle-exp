@@ -13,8 +13,8 @@ def shuffle(x, y):
   for songs in songs_by_y.values():
     if len(y) > 1:
       shuffle(songs, y[1:])
-
-    random.shuffle(songs)
+    else:
+      random.shuffle(songs)
 
     song_count = len(songs)
     appear_base = 100.0/song_count
