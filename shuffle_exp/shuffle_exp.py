@@ -2,6 +2,7 @@ from fisher_yates_shuffle import fisher_yates_shuffle as fisher_yates
 from sattolo_shuffle import sattolo_shuffle as sattolo
 from balanced_shuffle import balanced_shuffle as balanced
 from spotify_shuffle import spotify_shuffle as spotify
+from my_shuffle import my_shuffle as my
 
 class Song:
   def __init__(self, name, artist, album):
@@ -44,3 +45,16 @@ if __name__=='__main__':
   spotify.shuffle(test, ["artist", "album"])
   for song in test:
     print(song)
+
+  hap = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0}
+  print ("\r\nMy Shuffle:")
+  for i in range(10000):
+    test = list(x)
+    my.shuffle(test, ["artist"], [3, 7, 1, 2, 5, 9, 6, 4, 8])
+    index = test.index(x[5])
+    hap[index+1] += 1
+  sum = 0
+  for v in hap.values():
+    sum += v
+  for i in range(1, 10):
+    print (i, ": ", (hap[i]/sum)*100, "%")
