@@ -29,6 +29,13 @@ def fill(songs, max_count):
   songs[:] = songs[-offset:] + songs[:-offset]
 
 def merge(x, songs_by_y, songs_pos, max_count, y):
+  def sort_song(x, songs_pos, song, index):
+    old_pos = songs_pos.pop(song)
+    
+    if old_pos != index:
+      songs_pos[x[index]] = old_pos
+      x[old_pos], x[index] = x[index], x[old_pos]
+  
   index = -1
   last_song = None
 
@@ -44,18 +51,12 @@ def merge(x, songs_by_y, songs_pos, max_count, y):
     if last_song is not None and getattr(column[0], y) == getattr(last_song, y):
       for song in column[1:] + column[:1]:
         index += 1
-        old_pos = songs_pos.pop(song)
-        if old_pos != index:
-          songs_pos[x[index]] = old_pos
-          x[old_pos], x[index] = x[index], x[old_pos]
+        sort_song(x, songs_pos, song, index)
       last_song = column[0]
     else:
       for song in column:
         index += 1
-        old_pos = songs_pos.pop(song)
-        if old_pos != index:
-          songs_pos[x[index]] = old_pos
-          x[old_pos], x[index] = x[index], x[old_pos]
+        sort_song(x, songs_pos, song, index)
       last_song = column[-1]
 
 def shuffle(x, y):
