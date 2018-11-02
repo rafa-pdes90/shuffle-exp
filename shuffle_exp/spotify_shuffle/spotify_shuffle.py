@@ -22,9 +22,9 @@ def shuffle(x, y):
     appear_max, appear_min = min(100.0, appear_base + appear_lim), max(0.0, appear_base - appear_lim)
     
     offset = random.uniform(0.0, 100.0)
-    songs_pos[songs[0]] = offset
-    
+
+    last_pos = songs_pos[songs[0]] = offset    
     for i in range (1, song_count):
-      songs_pos[songs[i]] = (songs_pos[songs[i-1]] + random.uniform(appear_min, appear_max)) % 100
+      last_pos = songs_pos[songs[i]] = (last_pos + random.uniform(appear_min, appear_max)) % 100
 
   x.sort(key=lambda i: songs_pos[i])
