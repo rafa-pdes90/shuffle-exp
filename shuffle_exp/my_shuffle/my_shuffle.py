@@ -1,34 +1,48 @@
 import random
 
-def weigthed_shuffle(items, items_pos, weights):
-  items.sort(key=lambda i: -random.random() ** (1.0 / weights[items_pos[i]]))
+def weighted_shuffle(items, weight):
+  items.sort(key=lambda i: -random.random() ** (1.0 / getattr(i, weight)))
 
-def shuffle(x, y, w):
+def shuffle(x, y, w, w_step=None):
   songs_by_y = {}
   songs_pos = {}
-  
+
+  if w_step is None:
+    w_min=float("inf")
+    w_max=0
+
   for i in range(len(x)):
     y_attrib = getattr(x[i], y[0])
     if y_attrib not in songs_by_y:
       songs_by_y[y_attrib] = []
     songs_by_y[y_attrib].append(x[i])
-    songs_pos[x[i]] = i
+    weight = getattr(x[i], w)
+    if w_step is None:
+      w_min = min(w_min, weight)
+      w_max = max(w_max, weight)
+  
+  if w_step is None:
+    w_step = 100.0 / (w_max - w_min + 1)
   
   for songs in songs_by_y.values():
     if len(y) > 1:
-      shuffle(songs, y[1:], w)
+      shuffle(songs, y[1:], w, w_step=w_step)
     else:
-      weigthed_shuffle(songs, songs_pos, w)
+      weighted_shuffle(songs, w)
 
-    song_count = len(songs)
-    appear_base = 100.0/song_count
-    appear_lim = appear_base - 100.0/(song_count+1)
-    appear_max, appear_min = min(100.0, appear_base + appear_lim), max(0.0, appear_base - appear_lim)
-    
-    offset = random.uniform(0.0, 100.0)
+    last_weight = float("inf")
+    last_pos = 0
 
-    last_pos = songs_pos[songs[0]] = offset    
-    for i in range (1, song_count):
-      last_pos = songs_pos[songs[i]] = (last_pos + random.uniform(appear_min, appear_max)) % 100
+    for i in range(len(songs)):
+      if songs[i].weight >= last_weight:
+        low_lim = 100.0 - (songs[i].weight * w_step)
+        up_lim = low_lim + w_step
+        last_pos = songs_pos[songs[i]] = random.uniform(low_lim, up_lim)
+      else:
+        t_step = w_step*(100.0 - last_pos)/100.0
+        low_lim = 100.0 - (songs[i].weight * t_step)
+        up_lim = low_lim + t_step
+        last_pos = songs_pos[songs[i]] = random.uniform(low_lim, up_lim)
+
 
   x.sort(key=lambda i: songs_pos[i])
