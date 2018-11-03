@@ -34,7 +34,7 @@ def shuffle(x, y, w, w_step=None):
     last_pos = 0
 
     for i in range(len(songs)):
-      if songs[i].weight >= last_weight:
+      if songs[i].weight <= last_weight:
         low_lim = 100.0 - (songs[i].weight * w_step)
         up_lim = low_lim + w_step
         last_pos = songs_pos[songs[i]] = random.uniform(low_lim, up_lim)
@@ -43,6 +43,7 @@ def shuffle(x, y, w, w_step=None):
         low_lim = 100.0 - (songs[i].weight * t_step)
         up_lim = low_lim + t_step
         last_pos = songs_pos[songs[i]] = random.uniform(low_lim, up_lim)
+      last_weight = songs[i].weight
 
 
   x.sort(key=lambda i: songs_pos[i])
