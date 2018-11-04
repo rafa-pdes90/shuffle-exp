@@ -31,7 +31,7 @@ def shuffle(x, y, w, w_step=None):
       weighted_shuffle(songs, w)
 
     last_weight = float("inf")
-    last_pos = 0.0
+    last_pos = 0
 
     for i in range(len(songs)):
       if songs[i].weight <= last_weight:
@@ -44,5 +44,13 @@ def shuffle(x, y, w, w_step=None):
         up_lim = low_lim + t_step
         last_pos = songs_pos[songs[i]] = random.uniform(low_lim, up_lim)
       last_weight = songs[i].weight
+      
+    all_pos = songs_pos.values()
+    min_pos = min(all_pos)
+    max_pos = max(all_pos)
+    offset = random.uniform(-min_pos, 100.0 - max_pos)
+    
+    for key in songs_pos:
+      songs_pos[key] += offset
 
   x.sort(key=lambda i: songs_pos[i])
