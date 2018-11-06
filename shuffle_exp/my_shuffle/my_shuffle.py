@@ -1,4 +1,5 @@
 import random
+import statistics
 
 def weighted_shuffle(items, weight):
   items.sort(key=lambda i: -random.random() ** (1.0 / getattr(i, weight)))
@@ -23,8 +24,10 @@ def shuffle(x, y, w, w_step=None):
   
   if w_step is None:
     w_step = 100.0 / (w_max - w_min + 1)
+  
+  songs_groups = sorted(songs_by_y.values(), reverse=False, key=lambda i: statistics.median(getattr(s, w) for s in i))
 
-  for songs in songs_by_y.values():
+  for songs in songs_groups:
     if len(y) > 1:
       shuffle(songs, y[1:], w, w_step=w_step)
     else:
