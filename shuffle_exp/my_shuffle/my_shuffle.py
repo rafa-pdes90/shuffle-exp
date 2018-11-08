@@ -1,3 +1,4 @@
+from .sorteddict import SortedDict
 import random
 import numpy
 import statistics
@@ -7,7 +8,7 @@ def weighted_shuffle(items, weight):
 
 def shuffle(x, y, w, w_step=None):
   songs_by_y = {}
-  songs_pos = {}
+  songs_pos = SortedDict()
 
   if w_step is None:
     w_min=float("inf")
@@ -26,22 +27,32 @@ def shuffle(x, y, w, w_step=None):
   if w_step is None:
     w_step = 100.0 / (w_max - w_min + 1)
 
-  for songs in songs_by_y.values():
-    if len(y) > 1:
+  if len(y) > 1:
+    for songs in songs_by_y.values():
       shuffle(songs, y[1:], w, w_step=w_step)
-    else:
+  else:
+    for songs in songs_by_y.values():
       weighted_shuffle(songs, w)
 
+  songs_groups = sorted(songs_by_y.values(), reverse=True, key=lambda i: [getattr(s, w) for s in i])
+
+  for i in range(len(songs_groups) - 1, -1, -1):
+    songs = songs_groups[i]
     song_count = len(songs)
-    appear_base = 100.0/song_count
-    appear_lim = appear_base - 100.0/(song_count+1)
-    appear_max, appear_min = min(100.0, appear_base + appear_lim), max(0.0, appear_base - appear_lim)
 
-    offset_base = 100.0 - getattr(songs[0], w)*w_step
-    offset_mode = [offset_base, offset_base + (w_step/2), offset_base + w_step]
-    last_pos = songs_pos[songs[0]] = statistics.mean(numpy.random.triangular(0.0, offset_mode, 100.0))
+    offset_mode = 100.0 - (getattr(songs[0], w) - 0.5)*w_step
+    pos = numpy.random.triangular(0.0, offset_mode, 100.0)
+    while pos in songs_pos:
+      pos = numpy.random.triangular(0.0, offset_mode, 100.0)
+    last_index = songs_pos.__setitem__(pos, songs[0])
 
-    for i in range (1, song_count):
-      last_pos = songs_pos[songs[i]] = (last_pos + random.uniform(appear_min, appear_max)) % 100
+    for j in range (1, song_count):
+      song_w = getattr(songs[j], w)
+      total = 0
+      for k in range(last_index -1, -1, -1):
+        item = songs_pos.peekitem(index=k)
+        item_w = getattr(item[1], w)
+        if song_w <= item_w:
+          total += item_w
 
-  x.sort(key=lambda i: songs_pos[i])
+  x[:] = songs_pos.values()
