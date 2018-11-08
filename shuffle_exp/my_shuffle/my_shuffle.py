@@ -1,58 +1,57 @@
-from .sorteddict import SortedDict
 import random
 import numpy
 import statistics
 
-def weighted_shuffle(items, weight):
-  items.sort(key=lambda i: -random.random() ** (1.0 / getattr(i, weight)))
-
-def shuffle(x, y, w, w_step=None):
-  songs_by_y = {}
-  songs_pos = SortedDict()
-
-  if w_step is None:
-    w_min=float("inf")
-    w_max=0
+def shuffle(x, y, w):
+  def pos(song, weight, w_step):
+    mode = 100.0 - (getattr(song, weight) - random.random())*w_step
+    return numpy.random.triangular(0.0, mode, 100.0)
+  
+  w_min=float("inf")
+  w_max=0
   
   for i in range(len(x)):
+    weight = getattr(x[i], w)
+    w_min = min(w_min, weight)
+    w_max = max(w_max, weight)
+
+  w_step = 100.0 / (w_max - w_min + 1)
+  x.sort(key=lambda i: pos(i, w, w_step))
+  weighted_shuffle(x, y, w)
+
+def weighted_shuffle(x, y, w):
+  songs_by_y = {}
+  songs_pos = {}
+  song_count = len(x)
+  g_step = 1.0/song_count
+  
+  for i in range(song_count):
     y_attrib = getattr(x[i], y[0])
     if y_attrib not in songs_by_y:
       songs_by_y[y_attrib] = []
-    songs_by_y[y_attrib].append(x[i])
-    weight = getattr(x[i], w)
-    if w_step is None:
-      w_min = min(w_min, weight)
-      w_max = max(w_max, weight)
+    songs_by_y[y_attrib].append((x[i], i))
 
-  if w_step is None:
-    w_step = 100.0 / (w_max - w_min + 1)
+  for songs in songs_by_y.values():
+    if len(y) > 1:
+      weighted_shuffle(songs, y[1:], w)
+    
+    group_count = len(songs)
 
-  if len(y) > 1:
-    for songs in songs_by_y.values():
-      shuffle(songs, y[1:], w, w_step=w_step)
-  else:
-    for songs in songs_by_y.values():
-      weighted_shuffle(songs, w)
+    if group_count == 1:
+      songs_pos[songs[0][0]] = songs[0][1]/(song_count-1)
+    else:
+      first = songs[0][1]/(song_count-1)
+      last = songs[-1][1]/(song_count-1)
+      min_gap = group_count * g_step
 
-  songs_groups = sorted(songs_by_y.values(), reverse=True, key=lambda i: [getattr(s, w) for s in i])
+      if (last - first) < min_gap:
+        max_gap = (group_count+1) * g_step
+        inc = random.uniform(min_gap, max_gap)/2
+        first = max(0.0, first - inc)
+        last = min(1.0, last + inc)
 
-  for i in range(len(songs_groups) - 1, -1, -1):
-    songs = songs_groups[i]
-    song_count = len(songs)
+      songs_pos[songs[0][0]] = first
+      songs_pos[songs[-1][0]] = last
 
-    offset_mode = 100.0 - (getattr(songs[0], w) - 0.5)*w_step
-    pos = numpy.random.triangular(0.0, offset_mode, 100.0)
-    while pos in songs_pos:
-      pos = numpy.random.triangular(0.0, offset_mode, 100.0)
-    last_index = songs_pos.__setitem__(pos, songs[0])
 
-    for j in range (1, song_count):
-      song_w = getattr(songs[j], w)
-      total = 0
-      for k in range(last_index -1, -1, -1):
-        item = songs_pos.peekitem(index=k)
-        item_w = getattr(item[1], w)
-        if song_w <= item_w:
-          total += item_w
-
-  x[:] = songs_pos.values()
+  x.sort(key=lambda i: songs_pos[i])
