@@ -55,7 +55,7 @@ if __name__=='__main__':
   total = 1 * (10000**modo)
   for i in range(total):
     test = list(x)
-    my.shuffle(test, ["artist"], "weight")
+    my.shuffle(test, ["artist", "album"], "weight")
     if modo == 0:
       for s in test:
         print(s)
