@@ -7,14 +7,14 @@ from my_shuffle import my_shuffle as my
 from collections import Counter
 
 class Song:
-  def __init__(self, name, artist, album, weight):
-    self.name = name
+  def __init__(self, title, artist, album, weight):
+    self.title = title
     self.artist = artist
     self.album = album
     self.weight = weight
 
   def __str__(self):
-    return "{0.name} {0.artist} {0.album} {0.weight}".format(self)
+    return "{0.title} - {0.artist} - {0.album} - {0.weight}".format(self)
 
 if __name__=='__main__':
   x = [Song(1, "A", "a1", 3), Song(2, "A", "a2", 7), Song(3, "B", "b1", 1), Song(4, "C", "c1", 2),
