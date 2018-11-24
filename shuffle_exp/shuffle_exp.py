@@ -80,10 +80,11 @@ if __name__=='__main__':
   playlist_len = 100
   test_count = 1000
 
-  # Show how often a song is close to its expected position when every weight is unique
-  variation = max(1, playlist_len * 10/100)
   x = playlist_gen(playlist_len, playlist_len, unique_weight=True)
   weights = sorted([s.weight for s in x], reverse=True)
+  
+  # (10% variation) Show how often a song is close to its expected position when every weight is unique
+  variation = max(1, playlist_len * 10/100)
   hap = {w:0 for w in weights}
 
   for i in range(test_count):
@@ -95,9 +96,28 @@ if __name__=='__main__':
         hap[test[j].weight] += 1
   
   percs = [(hap[w]/test_count)*100 for w in weights]
-  plt.subplot(131)
+  plt.subplot(121)
   plt.plot(weights, percs)
 
+  # (No variation) Show how often a song is close to its expected position when every weight is unique
+  variation = 0
+  hap = {w:0 for w in weights}
+
+  for i in range(test_count):
+    test = list(x)
+    my_alt.shuffle(test, ["artist", "album"], "weight")
+
+    for j in range(playlist_len):
+      if test[j].weight <= weights[j] + variation and test[j].weight >= weights[j] - variation:
+        hap[test[j].weight] += 1
+  
+  percs = [(hap[w]/test_count)*100 for w in weights]
+  plt.subplot(122)
+  plt.plot(weights, percs)
+
+  plt.show()
+
+'''
   # Show how often a song is close to its expected position when every weight is not unique
   variation = max(1, playlist_len * 10/100)
   x = playlist_gen(playlist_len, playlist_len, unique_weight=True)
@@ -138,9 +158,6 @@ if __name__=='__main__':
   plt.subplot(133)
   plt.plot(range(1,playlist_len+1), percs)
 
-  plt.show()
-
-'''
   print ("\r\nMy Shuffle:")
   hap = {i:[] for i in range(len(x))}
   modo = 0
