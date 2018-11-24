@@ -39,9 +39,9 @@ def shuffle(x, y, w):
           max_gap = (sub_count+1) * g_step
           inc = random.uniform(min_gap, max_gap)/2
           first_inc = first - inc
-          first_rem = lim_min - first_inc
+          first_rem = max(0, lim_min - first_inc)
           last_inc = last + inc
-          last_rem = last_inc - lim_max
+          last_rem = max(0, last_inc - lim_max)
           first = max(lim_min, first_inc - last_rem)
           last = min(lim_max, last_inc + first_rem)
 
