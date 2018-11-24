@@ -6,8 +6,11 @@ from my_shuffle import my_shuffle as my
 from my_shuffle import my_shuffle_alt as my_alt
 
 from collections import Counter
+from timeit import default_timer as timer
 import random
 import matplotlib.pyplot as plt
+import numpy
+import statistics
 
 class Song:
   def __init__(self, title, artist, album, weight):
@@ -76,108 +79,297 @@ def playlist_gen(song_count, max_weight, unique_weight=False):
 
   return playlist
 
-if __name__=='__main__':
+def test1():
   playlist_len = 100
-  test_count = 1000
-
+  test_count = 1000000
   x = playlist_gen(playlist_len, playlist_len, unique_weight=True)
   weights = sorted([s.weight for s in x], reverse=True)
   
-  # (10% variation) Show how often a song is close to its expected position when every weight is unique
-  variation = max(1, playlist_len * 10/100)
-  hap = {w:0 for w in weights}
-
-  for i in range(test_count):
-    test = list(x)
-    my_alt.shuffle(test, ["artist", "album"], "weight")
-
-    for j in range(playlist_len):
-      if test[j].weight <= weights[j] + variation and test[j].weight >= weights[j] - variation:
-        hap[test[j].weight] += 1
-  
-  percs = [(hap[w]/test_count)*100 for w in weights]
-  plt.subplot(121)
-  plt.plot(weights, percs)
+  plt.figure(1)
 
   # (No variation) Show how often a song is close to its expected position when every weight is unique
   variation = 0
   hap = {w:0 for w in weights}
+  hap_alt = {w:0 for w in weights}
 
   for i in range(test_count):
-    test = list(x)
-    my_alt.shuffle(test, ["artist", "album"], "weight")
-
-    for j in range(playlist_len):
-      if test[j].weight <= weights[j] + variation and test[j].weight >= weights[j] - variation:
-        hap[test[j].weight] += 1
-  
-  percs = [(hap[w]/test_count)*100 for w in weights]
-  plt.subplot(122)
-  plt.plot(weights, percs)
-
-  plt.show()
-
-'''
-  # Show how often a song is close to its expected position when every weight is not unique
-  variation = max(1, playlist_len * 10/100)
-  x = playlist_gen(playlist_len, playlist_len, unique_weight=True)
-  weighted = sorted(x, key=lambda i: i.weight)
-  weights = sorted([s.weight for s in x], reverse=True)
-  hap = {i:0 for i in range(1, playlist_len+1)}
-
-  for i in range(test_count):
-    test = list(x)
-    my_alt.shuffle(test, ["artist", "album"], "weight")
-
-    for j in range(playlist_len):
-      if test[j].weight <= weights[j] + variation and test[j].weight >= weights[j] - variation:
-        index = weighted.index(test[j]) + 1
-        hap[index] += 1
-  
-  percs = [(hap[i]/test_count)*100 for i in range(1, playlist_len+1)]
-  plt.subplot(132)
-  plt.plot(range(1,playlist_len+1), percs)
-
-
-  # (Alternative) Show how often a song is close to its expected position when every weight is not unique
-  variation = max(1, playlist_len * 10/100)
-  hap = {i:0 for i in range(1, playlist_len+1)}
-
-  for i in range(test_count):
-    test = playlist_gen(playlist_len, playlist_len, unique_weight=False)
-    weighted = sorted(test, key=lambda i: i.weight)
-    weights = [s.weight for s in reversed(weighted)]
-    my_alt.shuffle(test, ["artist", "album"], "weight")
-
-    for j in range(playlist_len):
-      if test[j].weight <= weights[j] + variation and test[j].weight >= weights[j] - variation:
-        index = weighted.index(test[j]) + 1
-        hap[index] += 1
-  
-  percs = [(hap[i]/test_count)*100 for i in range(1, playlist_len+1)]
-  plt.subplot(133)
-  plt.plot(range(1,playlist_len+1), percs)
-
-  print ("\r\nMy Shuffle:")
-  hap = {i:[] for i in range(len(x))}
-  modo = 0
-  total = 1 * (10000**modo)
-  for i in range(total):
     test = list(x)
     my.shuffle(test, ["artist", "album"], "weight")
-    if modo == 0:
-      for s in test:
-        print(s)
-      print()
-    else:
-      for j in range(len(x)):
-        index = test.index(x[j]) + 1
-        hap[j].append(index)
-  if modo == 1:
-    for i in range(len(x)):
-      print("\r\n", x[i], ":")
-      counts = Counter(hap[i])
-      for j in range(1, len(x)+1):
-        perc = (counts[j]/len(hap[i]))*100
-        print(j, ":", perc)
-'''
+
+    for j in range(playlist_len):
+      if weights[j] - variation <= test[j].weight <= weights[j] + variation:
+        hap[test[j].weight] += 1
+
+  for i in range(test_count):
+    test = list(x)
+    my_alt.shuffle(test, ["artist", "album"], "weight")
+
+    for j in range(playlist_len):
+      if weights[j] - variation <= test[j].weight <= weights[j] + variation:
+        hap_alt[test[j].weight] += 1
+  
+  percs = [(hap[w]/test_count)*100 for w in weights]
+  percs_alt = [(hap_alt[w]/test_count)*100 for w in weights]
+
+  plt.subplot(121)
+  plt.gca().set_title('Sem variação')
+  plt.plot(weights, percs, label='Triangular Distribution')
+  plt.plot(weights, percs_alt, label='Weighted Random S.')
+  plt.xticks(numpy.arange(0, playlist_len+1, 0.1*playlist_len))
+  plt.yticks(numpy.arange(0, 101, 10))
+  plt.axis([0, playlist_len, 0, 100])
+  plt.xlabel('Pesos')
+  plt.ylabel('%')
+  plt.grid(True)
+  plt.legend()
+
+  # (10% variation) Show how often a song is close to its expected position when every weight is unique
+  variation = max(1, playlist_len * 10/100)
+  hap = {w:0 for w in weights}
+  hap_alt = {w:0 for w in weights}
+
+  for i in range(test_count):
+    test = list(x)
+    my.shuffle(test, ["artist", "album"], "weight")
+
+    for j in range(playlist_len):
+      if weights[j] - variation <= test[j].weight <= weights[j] + variation:
+        hap[test[j].weight] += 1
+
+  for i in range(test_count):
+    test = list(x)
+    my_alt.shuffle(test, ["artist"], "weight")
+
+    for j in range(playlist_len):
+      if weights[j] - variation <= test[j].weight <= weights[j] + variation:
+        hap_alt[test[j].weight] += 1
+  
+  percs = [(hap[w]/test_count)*100 for w in weights]
+  percs_alt = [(hap_alt[w]/test_count)*100 for w in weights]
+
+  plt.subplot(122)
+  plt.gca().set_title('10% de variação')
+  plt.plot(weights, percs, label='Triangular Distribution')
+  plt.plot(weights, percs_alt, label='Weighted Random S.')
+  plt.xticks(numpy.arange(0, playlist_len+1, 0.1*playlist_len))
+  plt.yticks(numpy.arange(0, 101, 10))
+  plt.axis([0, playlist_len, 0, 100])
+  plt.xlabel('Pesos')
+  plt.ylabel('%')
+  plt.grid(True)
+  plt.legend()
+
+  plt.tight_layout()
+  plt.savefig('1_1.png', bbox_inches='tight')
+  plt.close(1)
+
+  plt.figure(2)
+
+  # (Others) Show how often a song is close to its expected position when every weight is unique
+  variation = max(1, playlist_len * 25/100)
+  hap_fisher_yates = {w:0 for w in weights}
+  hap_balanced = {w:0 for w in weights}
+  hap_spotify = {w:0 for w in weights}
+
+  for i in range(test_count):
+    test = list(x)
+    fisher_yates.shuffle(test)
+
+    for j in range(playlist_len):
+      if weights[j] - variation <= test[j].weight <= weights[j] + variation:
+        hap_fisher_yates[test[j].weight] += 1
+
+  for i in range(test_count):
+    test = list(x)
+    balanced.shuffle(test, ["artist", "album"])
+
+    for j in range(playlist_len):
+      if weights[j] - variation <= test[j].weight <= weights[j] + variation:
+        hap_balanced[test[j].weight] += 1
+
+  for i in range(test_count):
+    test = list(x)
+    spotify.shuffle(test, ["artist", "album"])
+
+    for j in range(playlist_len):
+      if weights[j] - variation <= test[j].weight <= weights[j] + variation:
+        hap_spotify[test[j].weight] += 1
+  
+  percs_fisher_yates = [(hap_fisher_yates[w]/test_count)*100 for w in weights]
+  percs_balanced = [(hap_balanced[w]/test_count)*100 for w in weights]
+  percs_spotify = [(hap_spotify[w]/test_count)*100 for w in weights]
+  
+  plt.plot(weights, percs_fisher_yates, label='Fisher-Yates Shuffle')
+  plt.plot(weights, percs_balanced, label='Balanced Shuffle')
+  plt.plot(weights, percs_spotify, label='Spotify Shuffle')
+  plt.xlabel('Pesos')
+  plt.ylabel('%')
+  plt.grid(True)
+  plt.legend()
+
+  plt.tight_layout()
+  plt.savefig('1_2.png', bbox_inches='tight')
+  plt.close(2)
+
+def test2():
+  test_count = 1000000
+  max_len = 10000
+  all_len = [0]
+  fisher_yates_times = [0]
+  balanced_times = [0]
+  spotify_times = [0]
+  my_times = [0]
+  my_alt_times = [0]
+
+  for i in range(int(numpy.log2(max_len)) + 1):
+    playlist_len = 2**i
+    all_len.append(playlist_len)
+    x = playlist_gen(playlist_len, playlist_len, unique_weight=False)
+    
+    times = []
+    for i in range(test_count):
+      test = list(x)
+      start = timer()
+      fisher_yates.shuffle(test)
+      end = timer()
+      times.append(end-start)
+    fisher_yates_times.append(statistics.median(times))
+
+    times = []
+    for i in range(test_count):
+      test = list(x)
+      start = timer()
+      balanced.shuffle(test, ["artist", "album"])
+      end = timer()
+      times.append(end-start)
+    balanced_times.append(statistics.median(times))
+
+    times = []
+    for i in range(test_count):
+      test = list(x)
+      start = timer()
+      spotify.shuffle(test, ["artist", "album"])
+      end = timer()
+      times.append(end-start)
+    spotify_times.append(statistics.median(times))
+
+    times = []
+    for i in range(test_count):
+      test = list(x)
+      start = timer()
+      my.shuffle(test, ["artist", "album"], "weight")
+      end = timer()
+      times.append(end-start)
+    my_times.append(statistics.median(times))
+
+    times = []
+    for i in range(test_count):
+      test = list(x)
+      start = timer()
+      my_alt.shuffle(test, ["artist", "album"], "weight")
+      end = timer()
+      times.append(end-start)
+    my_alt_times.append(statistics.median(times))
+  
+  plt.figure(1)
+  plt.plot(all_len, fisher_yates_times, label='Fisher-Yates Shuffle')
+  plt.plot(all_len, balanced_times, label='Balanced Shuffle')
+  plt.plot(all_len, spotify_times, label='Spotify Shuffle')
+  plt.plot(all_len, my_times, label='Triangular Distribution')
+  plt.plot(all_len, my_alt_times, label='Weighted Random S.')
+  plt.xlabel('Tamanho da lista')
+  plt.ylabel('Tempo em segundos')
+  plt.grid(True)
+  plt.legend()
+
+  plt.gca().set_title('')
+  plt.tight_layout()
+  plt.savefig('2_1.png', bbox_inches='tight')
+  plt.close(1)
+
+def test3():
+  test_count = 1000000
+  max_len = 10000
+  all_len = [0]
+  fisher_yates_times = [0]
+  balanced_times = [0]
+  spotify_times = [0]
+  my_times = [0]
+  my_alt_times = [0]
+
+  for i in range(int(numpy.log2(max_len)) + 1):
+    playlist_len = 2**i
+    all_len.append(playlist_len)
+    x = playlist_gen(playlist_len, playlist_len, unique_weight=False)
+    
+    times = []
+    for i in range(test_count):
+      test = list(x)
+      start = timer()
+      fisher_yates.shuffle(test)
+      end = timer()
+      times.append(end-start)
+    fisher_yates_times.append(statistics.median(times))
+
+    times = []
+    for i in range(test_count):
+      test = list(x)
+      start = timer()
+      balanced.shuffle(test, ["artist", "album"])
+      end = timer()
+      times.append(end-start)
+    balanced_times.append(statistics.median(times))
+
+    times = []
+    for i in range(test_count):
+      test = list(x)
+      start = timer()
+      spotify.shuffle(test, ["artist", "album"])
+      end = timer()
+      times.append(end-start)
+    spotify_times.append(statistics.median(times))
+
+    times = []
+    for i in range(test_count):
+      test = list(x)
+      start = timer()
+      my.shuffle(test, ["artist", "album"], "weight")
+      end = timer()
+      times.append(end-start)
+    my_times.append(statistics.median(times))
+
+    times = []
+    for i in range(test_count):
+      test = list(x)
+      start = timer()
+      my_alt.shuffle(test, ["artist", "album"], "weight")
+      end = timer()
+      times.append(end-start)
+    my_alt_times.append(statistics.median(times))
+  
+  plt.figure(1)
+  plt.plot(all_len, fisher_yates_times, label='Fisher-Yates Shuffle')
+  plt.plot(all_len, balanced_times, label='Balanced Shuffle')
+  plt.plot(all_len, spotify_times, label='Spotify Shuffle')
+  plt.plot(all_len, my_times, label='Triangular Distribution')
+  plt.plot(all_len, my_alt_times, label='Weighted Random S.')
+  plt.xlabel('Tamanho da lista')
+  plt.ylabel('Tempo em segundos')
+  plt.grid(True)
+  plt.legend()
+
+  plt.gca().set_title('')
+  plt.tight_layout()
+  plt.savefig('2_1.png', bbox_inches='tight')
+  plt.close(1)
+
+
+if __name__=='__main__':
+  test = input("Test: ")
+
+  if test == '1':
+    test1()
+  elif test == '2':
+    test2()
+  elif test == '3':
+    test3()
