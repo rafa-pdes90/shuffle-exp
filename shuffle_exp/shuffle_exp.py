@@ -5,7 +5,6 @@ from spotify_shuffle import spotify_shuffle as spotify
 from my_shuffle import my_shuffle as my
 from my_shuffle import my_shuffle_alt as my_alt
 
-from collections import Counter
 from timeit import default_timer as timer
 import random
 import matplotlib.pyplot as plt
@@ -22,7 +21,7 @@ class Song:
   def __str__(self):
     return "{0.title} - {0.artist} - {0.album} - {0.weight}".format(self)
 
-def playlist_gen(song_count, max_weight, unique_weight=False):
+def playlist_gen(song_count, max_weight=None, unique_weight=False, random_pattern=True):
   def title_gen(title_len, rel_id):
     prefix = ""
 
@@ -32,57 +31,84 @@ def playlist_gen(song_count, max_weight, unique_weight=False):
     
     sufix = chr((rel_id % 26) + 65)
     return prefix + sufix
-  
-  playlist = []
-  song_id = 0
-  artist_count = int(random.triangular(1,song_count))
-  artist_rem = song_count - artist_count
+
+  if max_weight is None:
+    max_weight = song_count
 
   if unique_weight:
     weights = random.sample(range(1, max_weight+1), song_count)
   else:
     weights = [random.randint(1, max_weight) for i in range(song_count)]
   
-  for i in range(artist_count):
-    print()
-    if i < artist_count - 1:
-      artist_rem += 1
-      count = random.randint(1, artist_rem)
-      artist_rem -= count
-    else:
-      count = artist_rem + 1
+  playlist = []
+  song_id = 0
 
-    album_count = int(random.triangular(1, count))
-    album_rem = count - album_count
-
-    for j in range(album_count):
-      if j < album_count - 1:
-        album_rem += 1
-        count = random.randint(1, album_rem)
-        album_rem -= count
+  if random_pattern:
+    artist_count = int(random.triangular(1,song_count))
+    artist_rem = song_count - artist_count
+    
+    for i in range(artist_count):
+      if i < artist_count - 1:
+        artist_rem += 1
+        count = random.randint(1, artist_rem)
+        artist_rem -= count
       else:
-        count = album_rem + 1
-      
-      while count > 0:
-        rel_id = song_id
-        title_len = 1
+        count = artist_rem + 1
 
-        while rel_id >= 26:
-          title_len += 1
-          rel_id = (rel_id / 26) - 1
+      album_count = int(random.triangular(1, count))
+      album_rem = count - album_count
+
+      for j in range(album_count):
+        if j < album_count - 1:
+          album_rem += 1
+          count = random.randint(1, album_rem)
+          album_rem -= count
+        else:
+          count = album_rem + 1
         
-        title = title_gen(title_len, song_id)
-        song = Song(title, str(i), str(i)+str(j), weights[song_id])
-        playlist.append(song)
-        song_id += 1
-        count -= 1
+        while count > 0:
+          rel_id = song_id
+          title_len = 1
+
+          while rel_id >= 26:
+            title_len += 1
+            rel_id = (rel_id / 26) - 1
+          
+          title = title_gen(title_len, song_id)
+          song = Song(title, str(i), str(i)+str(j), weights[song_id])
+          playlist.append(song)
+          song_id += 1
+          count -= 1
+  else:
+    count = song_count+1
+    artist_count = int(numpy.log2(count))
+    
+    for i in range(artist_count):
+      count = max(1, count // 2)
+      album_count = int(numpy.log2(count)) + 1
+      count2 = count
+
+      for j in range(album_count):
+        count2 = max(1, count2 // 2)
+        for k in range(count2):
+          rel_id = song_id
+          title_len = 1
+
+          while rel_id >= 26:
+            title_len += 1
+            rel_id = (rel_id / 26) - 1
+          
+          title = title_gen(title_len, song_id)
+          song = Song(title, str(i), str(i)+str(j), weights[song_id])
+          playlist.append(song)
+          song_id += 1
 
   return playlist
 
-def test1(groups):
-  test_count = 1000000
-  playlist_len = 100
-  x = playlist_gen(playlist_len, playlist_len, unique_weight=True)
+def test1(pattern, groups):
+  test_count = 1000
+  playlist_len = 255
+  x = playlist_gen(playlist_len, unique_weight=True, random_pattern=pattern)
   weights = sorted([s.weight for s in x], reverse=True)
   
   plt.figure(1)
@@ -160,7 +186,7 @@ def test1(groups):
   plt.legend()
 
   plt.tight_layout()
-  plt.savefig('1_1_{0}.png'.format(len(groups)), bbox_inches='tight')
+  plt.savefig('1_1_{0}_{1}.png'.format(pattern, len(groups)), bbox_inches='tight')
   plt.close(1)
 
   plt.figure(2)
@@ -208,12 +234,13 @@ def test1(groups):
   plt.legend()
 
   plt.tight_layout()
-  plt.savefig('1_2_{0}.png'.format(len(groups)), bbox_inches='tight')
+  plt.savefig('1_2_{0}_{1}.png'.format(pattern, len(groups)), bbox_inches='tight')
   plt.close(2)
 
-def test2(unique, groups):
-  test_count = 1000000
-  max_len = 10000
+def test2(unique, pattern, groups):
+  test_count = 1000
+  playlist_len = 1
+  max_len = 1000
   all_len = [0]
   fisher_yates_times = [0]
   balanced_times = [0]
@@ -221,10 +248,9 @@ def test2(unique, groups):
   my_times = [0]
   my_alt_times = [0]
 
-  for i in range(int(numpy.log2(max_len)) + 1):
-    playlist_len = 2**i
+  while playlist_len <= max_len:
     all_len.append(playlist_len)
-    x = playlist_gen(playlist_len, playlist_len, unique_weight=unique)
+    x = playlist_gen(playlist_len, unique_weight=unique, random_pattern=pattern)
     
     times = []
     for i in range(test_count):
@@ -270,6 +296,8 @@ def test2(unique, groups):
       end = timer()
       times.append(end-start)
     my_alt_times.append(statistics.median(times))
+    
+    playlist_len = 2*playlist_len +1
   
   plt.figure(1)
   plt.plot(all_len, fisher_yates_times, label='Fisher-Yates Shuffle')
@@ -284,12 +312,13 @@ def test2(unique, groups):
 
   plt.gca().set_title('')
   plt.tight_layout()
-  plt.savefig('2_{0}_{1}.png'.format(unique, len(groups)), bbox_inches='tight')
+  plt.savefig('2_{0}_{1}_{2}.png'.format(unique, pattern, len(groups)), bbox_inches='tight')
   plt.close(1)
 
 def test3(unique, groups, test_group):
-  test_count = 1000000
-  max_len = 10000
+  test_count = 1000
+  playlist_len = 1
+  max_len = 1000
   all_len = [0]
   fisher_yates_hap = [0]
   balanced_hap = [0]
@@ -297,10 +326,9 @@ def test3(unique, groups, test_group):
   my_hap = [0]
   my_alt_hap = [0]
 
-  for i in range(int(numpy.log2(max_len)) + 1):
-    playlist_len = 2**i
+  while playlist_len <= max_len:
     all_len.append(playlist_len)
-    x = playlist_gen(playlist_len, playlist_len, unique_weight=unique)
+    x = playlist_gen(playlist_len, unique_weight=unique, random_pattern=False)
 
     hap = []
     for i in range(test_count):
@@ -312,7 +340,8 @@ def test3(unique, groups, test_group):
         if getattr(test[j], test_group) == getattr(test[j+1], test_group):
           hap_sum += 1
       hap.append(hap_sum)
-    fisher_yates_hap.append(statistics.median(hap))
+    perc = statistics.median(hap)/playlist_len
+    fisher_yates_hap.append(perc)
 
     hap = []
     for i in range(test_count):
@@ -324,7 +353,8 @@ def test3(unique, groups, test_group):
         if getattr(test[j], test_group) == getattr(test[j+1], test_group):
           hap_sum += 1
       hap.append(hap_sum)
-    balanced_hap.append(statistics.median(hap))
+    perc = statistics.median(hap)/playlist_len
+    balanced_hap.append(perc)
 
     hap = []
     for i in range(test_count):
@@ -336,7 +366,8 @@ def test3(unique, groups, test_group):
         if getattr(test[j], test_group) == getattr(test[j+1], test_group):
           hap_sum += 1
       hap.append(hap_sum)
-    spotify_hap.append(statistics.median(hap))
+    perc = statistics.median(hap)/playlist_len
+    spotify_hap.append(perc)
 
     hap = []
     for i in range(test_count):
@@ -348,7 +379,8 @@ def test3(unique, groups, test_group):
         if getattr(test[j], test_group) == getattr(test[j+1], test_group):
           hap_sum += 1
       hap.append(hap_sum)
-    my_hap.append(statistics.median(hap))
+    perc = statistics.median(hap)/playlist_len
+    my_hap.append(perc)
 
     hap = []
     for i in range(test_count):
@@ -360,7 +392,10 @@ def test3(unique, groups, test_group):
         if getattr(test[j], test_group) == getattr(test[j+1], test_group):
           hap_sum += 1
       hap.append(hap_sum)
-    my_alt_hap.append(statistics.median(hap))
+    perc = statistics.median(hap)/playlist_len
+    my_alt_hap.append(perc)
+    
+    playlist_len = 2*playlist_len + 1
   
   plt.figure(1)
   plt.plot(all_len, fisher_yates_hap, label='Fisher-Yates Shuffle')
@@ -379,8 +414,9 @@ def test3(unique, groups, test_group):
   plt.close(1)
 
 def test4(unique, groups, test_group):
-  test_count = 1000000
-  max_len = 10000
+  test_count = 1000
+  playlist_len = 1
+  max_len = 1000
   all_len = [0]
   fisher_yates_hap = [0]
   balanced_hap = [0]
@@ -388,10 +424,9 @@ def test4(unique, groups, test_group):
   my_hap = [0]
   my_alt_hap = [0]
 
-  for i in range(int(numpy.log2(max_len)) + 1):
-    playlist_len = 2**i
+  while playlist_len <= max_len:
     all_len.append(playlist_len)
-    x = playlist_gen(playlist_len, playlist_len, unique_weight=unique)
+    x = playlist_gen(playlist_len, unique_weight=unique, random_pattern=False)
 
     hap = []
     for i in range(test_count):
@@ -408,7 +443,8 @@ def test4(unique, groups, test_group):
           hap_sum += 1
         j += 1
       hap.append(hap_sum)
-    fisher_yates_hap.append(statistics.median(hap))
+    perc = statistics.median(hap)/playlist_len
+    fisher_yates_hap.append(perc)
 
     hap = []
     for i in range(test_count):
@@ -425,7 +461,8 @@ def test4(unique, groups, test_group):
           hap_sum += 1
         j += 1
       hap.append(hap_sum)
-    balanced_hap.append(statistics.median(hap))
+    perc = statistics.median(hap)/playlist_len
+    balanced_hap.append(perc)
 
     hap = []
     for i in range(test_count):
@@ -442,7 +479,8 @@ def test4(unique, groups, test_group):
           hap_sum += 1
         j += 1
       hap.append(hap_sum)
-    spotify_hap.append(statistics.median(hap))
+    perc = statistics.median(hap)/playlist_len
+    spotify_hap.append(perc)
 
     hap = []
     for i in range(test_count):
@@ -459,7 +497,8 @@ def test4(unique, groups, test_group):
           hap_sum += 1
         j += 1
       hap.append(hap_sum)
-    my_hap.append(statistics.median(hap))
+    perc = statistics.median(hap)/playlist_len
+    my_hap.append(perc)
 
     hap = []
     for i in range(test_count):
@@ -476,7 +515,10 @@ def test4(unique, groups, test_group):
           hap_sum += 1
         j += 1
       hap.append(hap_sum)
-    my_alt_hap.append(statistics.median(hap))
+    perc = statistics.median(hap)/playlist_len
+    my_alt_hap.append(perc)
+    
+    playlist_len = 2*playlist_len + 1
   
   plt.figure(1)
   plt.plot(all_len, fisher_yates_hap, label='Fisher-Yates Shuffle')
@@ -510,47 +552,87 @@ if __name__=='__main__':
     opt = [test]
 
   for test in opt:
-    if test == '1s':
-      test1(s)
-    if test == '1f':
-      test1(f)
-    elif test == '2fs':
-      test2(False, s)
-    elif test == '2ff':
-      test2(False, f)
-    elif test == '2ts':
-      test2(True, s)
-    elif test == '2tf':
-      test2(True, f)
+    if test == '1fs':
+      print('Test 1 - With Pattern - 1 group')
+      test1(False, s)
+    elif test == '1ff':
+      print('Test 1 - With Pattern - 2 groups')
+      test1(False, f)
+    elif test == '1ts':
+      print('Test 1 - Random Pattern - 1 group')
+      test1(True, f)
+    elif test == '1tf':
+      print('Test 1 - Random Pattern - 2 groups')
+      test1(True, f)
+    elif test == '2ffs':
+      print('Test 2 - Non-Unique Weight - With Pattern - 1 group')
+      test2(False, False, s)
+    elif test == '2fff':
+      print('Test 2 - Non-Unique Weight - With Pattern - 2 groups')
+      test2(False, False, f)
+    elif test == '2fts':
+      print('Test 2 - Non-Unique Weight - Random Pattern - 1 group')
+      test2(False, True, s)
+    elif test == '2ftf':
+      print('Test 2 - Non-Unique Weight - Random Pattern - 2 groups')
+      test2(False, True, f)
+    elif test == '2tfs':
+      print('Test 2 - Unique Weight - With Pattern - 1 group')
+      test2(True, False, s)
+    elif test == '2tff':
+      print('Test 2 - Unique Weight - With Pattern - 2 groups')
+      test2(True, False, f)
+    elif test == '2tts':
+      print('Test 2 - Unique Weight - Random Pattern - 1 group')
+      test2(True, True, s)
+    elif test == '2ttf':
+      print('Test 2 - Unique Weight - Random Pattern - 2 groups')
+      test2(True, True, f)
     elif test == '3fs1':
+      print('Test 3 - Non-Unique Weight - 1 group - Artist-based')
       test3(False, s, g1)
     elif test == '3fs2':
+      print('Test 3 - Non-Unique Weight - 1 group - Album-based')
       test3(False, s, g2)
     elif test == '3ff1':
+      print('Test 3 - Non-Unique Weight - 2 groups - Artist-based')
       test3(False, f, g1)
     elif test == '3ff2':
+      print('Test 3 - Non-Unique Weight - 2 groups - Album-based')
       test3(False, f, g2)
     elif test == '3ts1':
+      print('Test 3 - Unique Weight - 1 group - Artist-based')
       test3(True, s, g1)
     elif test == '3ts2':
+      print('Test 3 - Unique Weight - 1 group - Album-based')
       test3(True, s, g2)
     elif test == '3tf1':
+      print('Test 3 - Unique Weight - 2 groups - Artist-based')
       test3(True, f, g1)
     elif test == '3tf2':
+      print('Test 3 - Unique Weight - 2 groups - Album-based')
       test3(True, f, g2)
     elif test == '4fs1':
+      print('Test 4 - Non-Unique Weight - 1 group - Artist-based')
       test4(False, s, g1)
     elif test == '4fs2':
+      print('Test 4 - Non-Unique Weight - 1 group - Album-based')
       test4(False, s, g2)
     elif test == '4ff1':
+      print('Test 4 - Non-Unique Weight - 2 groups - Artist-based')
       test4(False, f, g1)
     elif test == '4ff2':
+      print('Test 4 - Non-Unique Weight - 2 groups - Album-based')
       test4(False, f, g2)
     elif test == '4ts1':
+      print('Test 4 - Unique Weight - 1 group - Artist-based')
       test4(True, s, g1)
     elif test == '4ts2':
+      print('Test 4 - Unique Weight - 1 group - Album-based')
       test4(True, s, g2)
     elif test == '4tf1':
+      print('Test 4 - Unique Weight - 2 groups - Artist-based')
       test4(True, f, g1)
     elif test == '4tf2':
+      print('Test 4 - Unique Weight - 2 groups - Album-based')
       test4(True, f, g2)
