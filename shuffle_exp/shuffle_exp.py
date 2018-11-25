@@ -287,7 +287,7 @@ def test2(unique, groups):
   plt.savefig('2_{0}_{1}.png'.format(unique, len(groups)), bbox_inches='tight')
   plt.close(1)
 
-def test3(unique, groups):
+def test3(unique, groups, test_group):
   test_count = 1000000
   max_len = 10000
   all_len = [0]
@@ -360,14 +360,17 @@ def test3(unique, groups):
 
   plt.gca().set_title('')
   plt.tight_layout()
-  plt.savefig('2_{0}_{1}.png'.format(unique, len(groups)), bbox_inches='tight')
+  plt.savefig('3_{0}_{1}_{2}.png'.format(unique, len(groups), test_group), bbox_inches='tight')
   plt.close(1)
 
 
 if __name__=='__main__':
+  g1 = "artist"
+  g2 = "album"
+  s = [g1]
+  f = [g1, g2]
+  
   test = input("Test: ")
-  s = ["artist"]
-  f = ["artist", "album"]
 
   if test == '1s':
     test1(s)
@@ -381,7 +384,19 @@ if __name__=='__main__':
     test2(True, s)
   elif test == '2tf':
     test2(True, f)
-  elif test == '3s':
-    test3(s)
-  elif test == '3f':
-    test3(f)
+  elif test == '3fs1':
+    test3(False, s, g1)
+  elif test == '3fs2':
+    test3(False, s, g2)
+  elif test == '3ff1':
+    test3(False, f, g1)
+  elif test == '3ff2':
+    test3(False, f, g2)
+  elif test == '3ts1':
+    test3(True, s, g1)
+  elif test == '3ts2':
+    test3(True, s, g2)
+  elif test == '3tf1':
+    test3(True, f, g1)
+  elif test == '3tf2':
+    test3(True, f, g2)
