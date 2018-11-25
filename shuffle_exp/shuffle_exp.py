@@ -79,7 +79,7 @@ def playlist_gen(song_count, max_weight, unique_weight=False):
 
   return playlist
 
-def test1():
+def test1(groups):
   playlist_len = 100
   test_count = 1000000
   x = playlist_gen(playlist_len, playlist_len, unique_weight=True)
@@ -94,7 +94,7 @@ def test1():
 
   for i in range(test_count):
     test = list(x)
-    my.shuffle(test, ["artist", "album"], "weight")
+    my.shuffle(test, groups, "weight")
 
     for j in range(playlist_len):
       if weights[j] - variation <= test[j].weight <= weights[j] + variation:
@@ -102,7 +102,7 @@ def test1():
 
   for i in range(test_count):
     test = list(x)
-    my_alt.shuffle(test, ["artist", "album"], "weight")
+    my_alt.shuffle(test, groups, "weight")
 
     for j in range(playlist_len):
       if weights[j] - variation <= test[j].weight <= weights[j] + variation:
@@ -130,7 +130,7 @@ def test1():
 
   for i in range(test_count):
     test = list(x)
-    my.shuffle(test, ["artist", "album"], "weight")
+    my.shuffle(test, groups, "weight")
 
     for j in range(playlist_len):
       if weights[j] - variation <= test[j].weight <= weights[j] + variation:
@@ -138,7 +138,7 @@ def test1():
 
   for i in range(test_count):
     test = list(x)
-    my_alt.shuffle(test, ["artist"], "weight")
+    my_alt.shuffle(test, groups, "weight")
 
     for j in range(playlist_len):
       if weights[j] - variation <= test[j].weight <= weights[j] + variation:
@@ -160,7 +160,7 @@ def test1():
   plt.legend()
 
   plt.tight_layout()
-  plt.savefig('1_1.png', bbox_inches='tight')
+  plt.savefig('1_1_{0}.png'.format(len(groups)), bbox_inches='tight')
   plt.close(1)
 
   plt.figure(2)
@@ -181,7 +181,7 @@ def test1():
 
   for i in range(test_count):
     test = list(x)
-    balanced.shuffle(test, ["artist", "album"])
+    balanced.shuffle(test, groups)
 
     for j in range(playlist_len):
       if weights[j] - variation <= test[j].weight <= weights[j] + variation:
@@ -189,7 +189,7 @@ def test1():
 
   for i in range(test_count):
     test = list(x)
-    spotify.shuffle(test, ["artist", "album"])
+    spotify.shuffle(test, groups)
 
     for j in range(playlist_len):
       if weights[j] - variation <= test[j].weight <= weights[j] + variation:
@@ -208,10 +208,10 @@ def test1():
   plt.legend()
 
   plt.tight_layout()
-  plt.savefig('1_2.png', bbox_inches='tight')
+  plt.savefig('1_2_{0}.png'.format(len(groups)), bbox_inches='tight')
   plt.close(2)
 
-def test2():
+def test2(unique, groups):
   test_count = 1000000
   max_len = 10000
   all_len = [0]
@@ -224,7 +224,7 @@ def test2():
   for i in range(int(numpy.log2(max_len)) + 1):
     playlist_len = 2**i
     all_len.append(playlist_len)
-    x = playlist_gen(playlist_len, playlist_len, unique_weight=False)
+    x = playlist_gen(playlist_len, playlist_len, unique_weight=unique)
     
     times = []
     for i in range(test_count):
@@ -239,7 +239,7 @@ def test2():
     for i in range(test_count):
       test = list(x)
       start = timer()
-      balanced.shuffle(test, ["artist", "album"])
+      balanced.shuffle(test, groups)
       end = timer()
       times.append(end-start)
     balanced_times.append(statistics.median(times))
@@ -248,7 +248,7 @@ def test2():
     for i in range(test_count):
       test = list(x)
       start = timer()
-      spotify.shuffle(test, ["artist", "album"])
+      spotify.shuffle(test, groups)
       end = timer()
       times.append(end-start)
     spotify_times.append(statistics.median(times))
@@ -257,7 +257,7 @@ def test2():
     for i in range(test_count):
       test = list(x)
       start = timer()
-      my.shuffle(test, ["artist", "album"], "weight")
+      my.shuffle(test, groups, "weight")
       end = timer()
       times.append(end-start)
     my_times.append(statistics.median(times))
@@ -266,7 +266,7 @@ def test2():
     for i in range(test_count):
       test = list(x)
       start = timer()
-      my_alt.shuffle(test, ["artist", "album"], "weight")
+      my_alt.shuffle(test, groups, "weight")
       end = timer()
       times.append(end-start)
     my_alt_times.append(statistics.median(times))
@@ -284,10 +284,10 @@ def test2():
 
   plt.gca().set_title('')
   plt.tight_layout()
-  plt.savefig('2_1.png', bbox_inches='tight')
+  plt.savefig('2_{0}_{1}.png'.format(unique, len(groups)), bbox_inches='tight')
   plt.close(1)
 
-def test3():
+def test3(unique, groups):
   test_count = 1000000
   max_len = 10000
   all_len = [0]
@@ -300,7 +300,7 @@ def test3():
   for i in range(int(numpy.log2(max_len)) + 1):
     playlist_len = 2**i
     all_len.append(playlist_len)
-    x = playlist_gen(playlist_len, playlist_len, unique_weight=False)
+    x = playlist_gen(playlist_len, playlist_len, unique_weight=unique)
     
     times = []
     for i in range(test_count):
@@ -315,7 +315,7 @@ def test3():
     for i in range(test_count):
       test = list(x)
       start = timer()
-      balanced.shuffle(test, ["artist", "album"])
+      balanced.shuffle(test, groups)
       end = timer()
       times.append(end-start)
     balanced_times.append(statistics.median(times))
@@ -324,7 +324,7 @@ def test3():
     for i in range(test_count):
       test = list(x)
       start = timer()
-      spotify.shuffle(test, ["artist", "album"])
+      spotify.shuffle(test, groups)
       end = timer()
       times.append(end-start)
     spotify_times.append(statistics.median(times))
@@ -333,7 +333,7 @@ def test3():
     for i in range(test_count):
       test = list(x)
       start = timer()
-      my.shuffle(test, ["artist", "album"], "weight")
+      my.shuffle(test, groups, "weight")
       end = timer()
       times.append(end-start)
     my_times.append(statistics.median(times))
@@ -342,7 +342,7 @@ def test3():
     for i in range(test_count):
       test = list(x)
       start = timer()
-      my_alt.shuffle(test, ["artist", "album"], "weight")
+      my_alt.shuffle(test, groups, "weight")
       end = timer()
       times.append(end-start)
     my_alt_times.append(statistics.median(times))
@@ -360,16 +360,28 @@ def test3():
 
   plt.gca().set_title('')
   plt.tight_layout()
-  plt.savefig('2_1.png', bbox_inches='tight')
+  plt.savefig('2_{0}_{1}.png'.format(unique, len(groups)), bbox_inches='tight')
   plt.close(1)
 
 
 if __name__=='__main__':
   test = input("Test: ")
+  s = ["artist"]
+  f = ["artist", "album"]
 
-  if test == '1':
-    test1()
-  elif test == '2':
-    test2()
-  elif test == '3':
-    test3()
+  if test == '1s':
+    test1(s)
+  if test == '1f':
+    test1(f)
+  elif test == '2fs':
+    test2(False, s)
+  elif test == '2ff':
+    test2(False, f)
+  elif test == '2ts':
+    test2(True, s)
+  elif test == '2tf':
+    test2(True, f)
+  elif test == '3s':
+    test3(s)
+  elif test == '3f':
+    test3(f)
