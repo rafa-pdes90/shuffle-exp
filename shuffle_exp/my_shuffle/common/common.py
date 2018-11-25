@@ -30,19 +30,16 @@ def shuffle(x, y, w):
       lim_max = 1.0
 
       while i < j:
-        first = pos[i]/(song_count-1)
-        last = pos[j]/(song_count-1)
         sub_count = j-i + 1
         min_gap = (sub_count) * g_step
         max_gap = (sub_count+1) * g_step
         inc = random.uniform(min_gap, max_gap)/2
-        first_inc = first - inc
+        first_inc = pos[i]/(song_count-1) - inc
         first_rem = max(0, lim_min - first_inc)
-        last_inc = last + inc
+        last_inc = pos[j]/(song_count-1) + inc
         last_rem = max(0, last_inc - lim_max)
         first = max(lim_min, first_inc - last_rem)
         last = min(lim_max, last_inc + first_rem)
-
         lim_min = songs_pos[songs[i]] = first
         lim_max = songs_pos[songs[j]] = last
         i += 1
