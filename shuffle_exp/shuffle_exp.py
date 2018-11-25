@@ -80,8 +80,8 @@ def playlist_gen(song_count, max_weight, unique_weight=False):
   return playlist
 
 def test1(groups):
-  playlist_len = 100
   test_count = 1000000
+  playlist_len = 100
   x = playlist_gen(playlist_len, playlist_len, unique_weight=True)
   weights = sorted([s.weight for s in x], reverse=True)
   
@@ -291,70 +291,85 @@ def test3(unique, groups, test_group):
   test_count = 1000000
   max_len = 10000
   all_len = [0]
-  fisher_yates_times = [0]
-  balanced_times = [0]
-  spotify_times = [0]
-  my_times = [0]
-  my_alt_times = [0]
+  fisher_yates_hap = [0]
+  balanced_hap = [0]
+  spotify_hap = [0]
+  my_hap = [0]
+  my_alt_hap = [0]
 
   for i in range(int(numpy.log2(max_len)) + 1):
     playlist_len = 2**i
     all_len.append(playlist_len)
     x = playlist_gen(playlist_len, playlist_len, unique_weight=unique)
-    
-    times = []
+
+    hap = []
     for i in range(test_count):
       test = list(x)
-      start = timer()
       fisher_yates.shuffle(test)
-      end = timer()
-      times.append(end-start)
-    fisher_yates_times.append(statistics.median(times))
 
-    times = []
+      hap_sum = 0
+      for j in range(playlist_len-1):
+        if getattr(test[j], test_group) == getattr(test[j+1], test_group):
+          hap_sum += 1
+      hap.append(hap_sum)
+    fisher_yates_hap.append(statistics.median(hap))
+
+    hap = []
     for i in range(test_count):
       test = list(x)
-      start = timer()
       balanced.shuffle(test, groups)
-      end = timer()
-      times.append(end-start)
-    balanced_times.append(statistics.median(times))
 
-    times = []
+      hap_sum = 0
+      for j in range(playlist_len-1):
+        if getattr(test[j], test_group) == getattr(test[j+1], test_group):
+          hap_sum += 1
+      hap.append(hap_sum)
+    balanced_hap.append(statistics.median(hap))
+
+    hap = []
     for i in range(test_count):
       test = list(x)
-      start = timer()
       spotify.shuffle(test, groups)
-      end = timer()
-      times.append(end-start)
-    spotify_times.append(statistics.median(times))
 
-    times = []
+      hap_sum = 0
+      for j in range(playlist_len-1):
+        if getattr(test[j], test_group) == getattr(test[j+1], test_group):
+          hap_sum += 1
+      hap.append(hap_sum)
+    spotify_hap.append(statistics.median(hap))
+
+    hap = []
     for i in range(test_count):
       test = list(x)
-      start = timer()
       my.shuffle(test, groups, "weight")
-      end = timer()
-      times.append(end-start)
-    my_times.append(statistics.median(times))
 
-    times = []
+      hap_sum = 0
+      for j in range(playlist_len-1):
+        if getattr(test[j], test_group) == getattr(test[j+1], test_group):
+          hap_sum += 1
+      hap.append(hap_sum)
+    my_hap.append(statistics.median(hap))
+
+    hap = []
     for i in range(test_count):
       test = list(x)
-      start = timer()
       my_alt.shuffle(test, groups, "weight")
-      end = timer()
-      times.append(end-start)
-    my_alt_times.append(statistics.median(times))
+
+      hap_sum = 0
+      for j in range(playlist_len-1):
+        if getattr(test[j], test_group) == getattr(test[j+1], test_group):
+          hap_sum += 1
+      hap.append(hap_sum)
+    my_alt_hap.append(statistics.median(hap))
   
   plt.figure(1)
-  plt.plot(all_len, fisher_yates_times, label='Fisher-Yates Shuffle')
-  plt.plot(all_len, balanced_times, label='Balanced Shuffle')
-  plt.plot(all_len, spotify_times, label='Spotify Shuffle')
-  plt.plot(all_len, my_times, label='Triangular Distribution')
-  plt.plot(all_len, my_alt_times, label='Weighted Random S.')
+  plt.plot(all_len, fisher_yates_hap, label='Fisher-Yates Shuffle')
+  plt.plot(all_len, balanced_hap, label='Balanced Shuffle')
+  plt.plot(all_len, spotify_hap, label='Spotify Shuffle')
+  plt.plot(all_len, my_hap, label='Triangular Distribution')
+  plt.plot(all_len, my_alt_hap, label='Weighted Random S.')
   plt.xlabel('Tamanho da lista')
-  plt.ylabel('Tempo em segundos')
+  plt.ylabel('Nº de duplas')
   plt.grid(True)
   plt.legend()
 
@@ -363,40 +378,179 @@ def test3(unique, groups, test_group):
   plt.savefig('3_{0}_{1}_{2}.png'.format(unique, len(groups), test_group), bbox_inches='tight')
   plt.close(1)
 
+def test4(unique, groups, test_group):
+  test_count = 1000000
+  max_len = 10000
+  all_len = [0]
+  fisher_yates_hap = [0]
+  balanced_hap = [0]
+  spotify_hap = [0]
+  my_hap = [0]
+  my_alt_hap = [0]
+
+  for i in range(int(numpy.log2(max_len)) + 1):
+    playlist_len = 2**i
+    all_len.append(playlist_len)
+    x = playlist_gen(playlist_len, playlist_len, unique_weight=unique)
+
+    hap = []
+    for i in range(test_count):
+      test = list(x)
+      fisher_yates.shuffle(test)
+
+      hap_sum = 0
+      j = 0
+      while j < (playlist_len-1):
+        initial_j = j
+        while j < (playlist_len-1) and getattr(test[j], test_group) == getattr(test[j+1], test_group):
+          j += 1
+        if j > initial_j:
+          hap_sum += 1
+        j += 1
+      hap.append(hap_sum)
+    fisher_yates_hap.append(statistics.median(hap))
+
+    hap = []
+    for i in range(test_count):
+      test = list(x)
+      balanced.shuffle(test, groups)
+
+      hap_sum = 0
+      j = 0
+      while j < (playlist_len-1):
+        initial_j = j
+        while j < (playlist_len-1) and getattr(test[j], test_group) == getattr(test[j+1], test_group):
+          j += 1
+        if j > initial_j:
+          hap_sum += 1
+        j += 1
+      hap.append(hap_sum)
+    balanced_hap.append(statistics.median(hap))
+
+    hap = []
+    for i in range(test_count):
+      test = list(x)
+      spotify.shuffle(test, groups)
+
+      hap_sum = 0
+      j = 0
+      while j < (playlist_len-1):
+        initial_j = j
+        while j < (playlist_len-1) and getattr(test[j], test_group) == getattr(test[j+1], test_group):
+          j += 1
+        if j > initial_j:
+          hap_sum += 1
+        j += 1
+      hap.append(hap_sum)
+    spotify_hap.append(statistics.median(hap))
+
+    hap = []
+    for i in range(test_count):
+      test = list(x)
+      my.shuffle(test, groups, "weight")
+
+      hap_sum = 0
+      j = 0
+      while j < (playlist_len-1):
+        initial_j = j
+        while j < (playlist_len-1) and getattr(test[j], test_group) == getattr(test[j+1], test_group):
+          j += 1
+        if j > initial_j:
+          hap_sum += 1
+        j += 1
+      hap.append(hap_sum)
+    my_hap.append(statistics.median(hap))
+
+    hap = []
+    for i in range(test_count):
+      test = list(x)
+      my_alt.shuffle(test, groups, "weight")
+
+      hap_sum = 0
+      j = 0
+      while j < (playlist_len-1):
+        initial_j = j
+        while j < (playlist_len-1) and getattr(test[j], test_group) == getattr(test[j+1], test_group):
+          j += 1
+        if j > initial_j:
+          hap_sum += 1
+        j += 1
+      hap.append(hap_sum)
+    my_alt_hap.append(statistics.median(hap))
+  
+  plt.figure(1)
+  plt.plot(all_len, fisher_yates_hap, label='Fisher-Yates Shuffle')
+  plt.plot(all_len, balanced_hap, label='Balanced Shuffle')
+  plt.plot(all_len, spotify_hap, label='Spotify Shuffle')
+  plt.plot(all_len, my_hap, label='Triangular Distribution')
+  plt.plot(all_len, my_alt_hap, label='Weighted Random S.')
+  plt.xlabel('Tamanho da lista')
+  plt.ylabel('Nº de aglomerados')
+  plt.grid(True)
+  plt.legend()
+
+  plt.gca().set_title('')
+  plt.tight_layout()
+  plt.savefig('4_{0}_{1}_{2}.png'.format(unique, len(groups), test_group), bbox_inches='tight')
+  plt.close(1)
 
 if __name__=='__main__':
   g1 = "artist"
   g2 = "album"
   s = [g1]
   f = [g1, g2]
-  
+
   test = input("Test: ")
 
-  if test == '1s':
-    test1(s)
-  if test == '1f':
-    test1(f)
-  elif test == '2fs':
-    test2(False, s)
-  elif test == '2ff':
-    test2(False, f)
-  elif test == '2ts':
-    test2(True, s)
-  elif test == '2tf':
-    test2(True, f)
-  elif test == '3fs1':
-    test3(False, s, g1)
-  elif test == '3fs2':
-    test3(False, s, g2)
-  elif test == '3ff1':
-    test3(False, f, g1)
-  elif test == '3ff2':
-    test3(False, f, g2)
-  elif test == '3ts1':
-    test3(True, s, g1)
-  elif test == '3ts2':
-    test3(True, s, g2)
-  elif test == '3tf1':
-    test3(True, f, g1)
-  elif test == '3tf2':
-    test3(True, f, g2)
+  if test == '0':
+    opt = ['1s', '1f', '2fs', '2ff', '2ts', '2tf',
+          '3fs1', '3fs2', '3ff1', '3ff2', '3ts1', '3ts2', '3tf1', '3tf2',
+          '4fs1', '4fs2', '4ff1', '4ff2', '4ts1', '4ts2', '4tf1', '4tf2']
+  else:
+    opt = [test]
+
+  for test in opt:
+    if test == '1s':
+      test1(s)
+    if test == '1f':
+      test1(f)
+    elif test == '2fs':
+      test2(False, s)
+    elif test == '2ff':
+      test2(False, f)
+    elif test == '2ts':
+      test2(True, s)
+    elif test == '2tf':
+      test2(True, f)
+    elif test == '3fs1':
+      test3(False, s, g1)
+    elif test == '3fs2':
+      test3(False, s, g2)
+    elif test == '3ff1':
+      test3(False, f, g1)
+    elif test == '3ff2':
+      test3(False, f, g2)
+    elif test == '3ts1':
+      test3(True, s, g1)
+    elif test == '3ts2':
+      test3(True, s, g2)
+    elif test == '3tf1':
+      test3(True, f, g1)
+    elif test == '3tf2':
+      test3(True, f, g2)
+    elif test == '4fs1':
+      test4(False, s, g1)
+    elif test == '4fs2':
+      test4(False, s, g2)
+    elif test == '4ff1':
+      test4(False, f, g1)
+    elif test == '4ff2':
+      test4(False, f, g2)
+    elif test == '4ts1':
+      test4(True, s, g1)
+    elif test == '4ts2':
+      test4(True, s, g2)
+    elif test == '4tf1':
+      test4(True, f, g1)
+    elif test == '4tf2':
+      test4(True, f, g2)
