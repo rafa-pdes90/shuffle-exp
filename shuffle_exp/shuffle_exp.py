@@ -239,9 +239,9 @@ def test1(pattern, groups):
   plt.close(2)
 
 def test2(unique, pattern, groups):
-  test_count = 10000
+  test_count = 5000
   playlist_len = 1
-  max_len = 10000
+  max_len = 5000
   all_len = [0]
   fisher_yates_times = [0]
   balanced_times = [0]
