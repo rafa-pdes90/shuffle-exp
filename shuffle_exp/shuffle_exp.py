@@ -106,7 +106,7 @@ def playlist_gen(song_count, max_weight=None, unique_weight=False, random_patter
   return playlist
 
 def test1(pattern, groups):
-  test_count = 1000
+  test_count = 1000000
   playlist_len = 255
   x = playlist_gen(playlist_len, unique_weight=True, random_pattern=pattern)
   weights = sorted([s.weight for s in x], reverse=True)
@@ -141,11 +141,10 @@ def test1(pattern, groups):
   plt.gca().set_title('Sem variação')
   plt.plot(weights, percs, label='Triangular Distribution')
   plt.plot(weights, percs_alt, label='Weighted Random S.')
-  plt.xticks(numpy.arange(0, playlist_len+1, 0.1*playlist_len))
-  plt.yticks(numpy.arange(0, 101, 10))
-  plt.axis([0, playlist_len, 0, 100])
+  plt.xticks(range(0, playlist_len+1, 50))
+  plt.yticks(range(0, 61, 10))
   plt.xlabel('Pesos')
-  plt.ylabel('%')
+  plt.ylabel('Correspondência (%)')
   plt.grid(True)
   plt.legend()
 
@@ -177,11 +176,11 @@ def test1(pattern, groups):
   plt.gca().set_title('10% de variação')
   plt.plot(weights, percs, label='Triangular Distribution')
   plt.plot(weights, percs_alt, label='Weighted Random S.')
-  plt.xticks(numpy.arange(0, playlist_len+1, 0.1*playlist_len))
-  plt.yticks(numpy.arange(0, 101, 10))
-  plt.axis([0, playlist_len, 0, 100])
+  plt.xticks(range(0, playlist_len+1, 50))
+  plt.yticks(range(0, 101, 10))
+  plt.axis([-5, playlist_len, 0, 100])
   plt.xlabel('Pesos')
-  plt.ylabel('%')
+  plt.ylabel('Correspondência (%)')
   plt.grid(True)
   plt.legend()
 
@@ -228,8 +227,10 @@ def test1(pattern, groups):
   plt.plot(weights, percs_fisher_yates, label='Fisher-Yates Shuffle')
   plt.plot(weights, percs_balanced, label='Balanced Shuffle')
   plt.plot(weights, percs_spotify, label='Spotify Shuffle')
+  plt.xticks(range(0, playlist_len+1, 50))
+  plt.yticks(range(0, 61, 20))
   plt.xlabel('Pesos')
-  plt.ylabel('%')
+  plt.ylabel('Correspondência (%)')
   plt.grid(True)
   plt.legend()
 
@@ -238,9 +239,9 @@ def test1(pattern, groups):
   plt.close(2)
 
 def test2(unique, pattern, groups):
-  test_count = 1000
+  test_count = 10000
   playlist_len = 1
-  max_len = 1000
+  max_len = 10000
   all_len = [0]
   fisher_yates_times = [0]
   balanced_times = [0]
@@ -259,7 +260,7 @@ def test2(unique, pattern, groups):
       fisher_yates.shuffle(test)
       end = timer()
       times.append(end-start)
-    fisher_yates_times.append(statistics.median(times))
+    fisher_yates_times.append(1000*statistics.median(times))
 
     times = []
     for i in range(test_count):
@@ -268,7 +269,7 @@ def test2(unique, pattern, groups):
       balanced.shuffle(test, groups)
       end = timer()
       times.append(end-start)
-    balanced_times.append(statistics.median(times))
+    balanced_times.append(1000*statistics.median(times))
 
     times = []
     for i in range(test_count):
@@ -277,7 +278,7 @@ def test2(unique, pattern, groups):
       spotify.shuffle(test, groups)
       end = timer()
       times.append(end-start)
-    spotify_times.append(statistics.median(times))
+    spotify_times.append(1000*statistics.median(times))
 
     times = []
     for i in range(test_count):
@@ -286,7 +287,7 @@ def test2(unique, pattern, groups):
       my.shuffle(test, groups, "weight")
       end = timer()
       times.append(end-start)
-    my_times.append(statistics.median(times))
+    my_times.append(1000*statistics.median(times))
 
     times = []
     for i in range(test_count):
@@ -295,7 +296,7 @@ def test2(unique, pattern, groups):
       my_alt.shuffle(test, groups, "weight")
       end = timer()
       times.append(end-start)
-    my_alt_times.append(statistics.median(times))
+    my_alt_times.append(1000*statistics.median(times))
     
     playlist_len = 2*playlist_len +1
   
@@ -306,7 +307,7 @@ def test2(unique, pattern, groups):
   plt.plot(all_len, my_times, label='Triangular Distribution')
   plt.plot(all_len, my_alt_times, label='Weighted Random S.')
   plt.xlabel('Tamanho da lista')
-  plt.ylabel('Tempo em segundos')
+  plt.ylabel('Tempo em milissegundos')
   plt.grid(True)
   plt.legend()
 
@@ -316,9 +317,9 @@ def test2(unique, pattern, groups):
   plt.close(1)
 
 def test3(unique, groups, test_group):
-  test_count = 1000
+  test_count = 10000
   playlist_len = 1
-  max_len = 1000
+  max_len = 10000
   all_len = [0]
   fisher_yates_hap = [0]
   balanced_hap = [0]
@@ -404,7 +405,7 @@ def test3(unique, groups, test_group):
   plt.plot(all_len, my_hap, label='Triangular Distribution')
   plt.plot(all_len, my_alt_hap, label='Weighted Random S.')
   plt.xlabel('Tamanho da lista')
-  plt.ylabel('Nº de duplas')
+  plt.ylabel('Taxa de duplas (%)')
   plt.grid(True)
   plt.legend()
 
@@ -414,9 +415,9 @@ def test3(unique, groups, test_group):
   plt.close(1)
 
 def test4(unique, groups, test_group):
-  test_count = 1000
+  test_count = 10000
   playlist_len = 1
-  max_len = 1000
+  max_len = 10000
   all_len = [0]
   fisher_yates_hap = [0]
   balanced_hap = [0]
@@ -527,7 +528,7 @@ def test4(unique, groups, test_group):
   plt.plot(all_len, my_hap, label='Triangular Distribution')
   plt.plot(all_len, my_alt_hap, label='Weighted Random S.')
   plt.xlabel('Tamanho da lista')
-  plt.ylabel('Nº de aglomerados')
+  plt.ylabel('Taxa de aglomerados (%)')
   plt.grid(True)
   plt.legend()
 
@@ -545,7 +546,7 @@ if __name__=='__main__':
   test = input("Test: ")
 
   if test == '0':
-    opt = ['1s', '1f', '2fs', '2ff', '2ts', '2tf',
+    opt = ['1fs', '1ff', '1ts', '1tf', '2ffs', '2fff', '2fts', '2ftf', '2tfs', '2tff', '2tts', '2ttf',
           '3fs1', '3fs2', '3ff1', '3ff2', '3ts1', '3ts2', '3tf1', '3tf2',
           '4fs1', '4fs2', '4ff1', '4ff2', '4ts1', '4ts2', '4tf1', '4tf2']
   else:
@@ -553,22 +554,22 @@ if __name__=='__main__':
 
   for test in opt:
     if test == '1fs':
-      print('Test 1 - With Pattern - 1 group')
+      print('Test 1 - Not-Random Pattern - 1 group')
       test1(False, s)
     elif test == '1ff':
-      print('Test 1 - With Pattern - 2 groups')
+      print('Test 1 - Not-Random Pattern - 2 groups')
       test1(False, f)
     elif test == '1ts':
       print('Test 1 - Random Pattern - 1 group')
-      test1(True, f)
+      test1(True, s)
     elif test == '1tf':
       print('Test 1 - Random Pattern - 2 groups')
       test1(True, f)
     elif test == '2ffs':
-      print('Test 2 - Non-Unique Weight - With Pattern - 1 group')
+      print('Test 2 - Non-Unique Weight - Not-Random Pattern - 1 group')
       test2(False, False, s)
     elif test == '2fff':
-      print('Test 2 - Non-Unique Weight - With Pattern - 2 groups')
+      print('Test 2 - Non-Unique Weight - Not-Random Pattern - 2 groups')
       test2(False, False, f)
     elif test == '2fts':
       print('Test 2 - Non-Unique Weight - Random Pattern - 1 group')
@@ -577,10 +578,10 @@ if __name__=='__main__':
       print('Test 2 - Non-Unique Weight - Random Pattern - 2 groups')
       test2(False, True, f)
     elif test == '2tfs':
-      print('Test 2 - Unique Weight - With Pattern - 1 group')
+      print('Test 2 - Unique Weight - Not-Random Pattern - 1 group')
       test2(True, False, s)
     elif test == '2tff':
-      print('Test 2 - Unique Weight - With Pattern - 2 groups')
+      print('Test 2 - Unique Weight - Not-Random Pattern - 2 groups')
       test2(True, False, f)
     elif test == '2tts':
       print('Test 2 - Unique Weight - Random Pattern - 1 group')
